@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { POI, Building } from '../types'
 
-const API_BASE = '/api'
+//const API_BASE = '/api'
+const API_BASE = 'https://ssunavigation-production.up.railway.app/api'
 
 const api = axios.create({
   baseURL: API_BASE,
