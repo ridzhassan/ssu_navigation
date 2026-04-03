@@ -1,0 +1,201 @@
+/* Leaflet - must load before Tailwind so map tiles render correctly */
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #16a34a;
+  --primary-light: #22c55e;
+  --primary-dark: #15803d;
+  --accent: #eab308;
+  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+}
+
+/* Light mode overrides */
+html.light {
+  --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+}
+html.light body {
+  background: var(--bg-gradient);
+  color: #1e293b;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg-gradient);
+  min-height: 100vh;
+  color: #e2e8f0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', system-ui, sans-serif;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40;
+  }
+  
+  .btn-secondary {
+    @apply bg-slate-700 hover:bg-slate-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200;
+  }
+  
+  .card {
+    @apply bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 shadow-xl;
+  }
+  
+  .input {
+    @apply w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
+  }
+  
+  .label {
+    @apply block text-sm font-medium text-slate-300 mb-1.5;
+  }
+  
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-200;
+  }
+  
+  .sidebar-link.active {
+    @apply text-white bg-primary-600/20 border-l-2 border-primary-500;
+  }
+  
+  .table-header {
+    @apply text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-3;
+  }
+  
+  .table-cell {
+    @apply px-4 py-4 text-sm text-slate-300;
+  }
+  
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .badge-success {
+    @apply badge bg-green-500/20 text-green-400;
+  }
+  
+  .badge-warning {
+    @apply badge bg-yellow-500/20 text-yellow-400;
+  }
+  
+  .badge-info {
+    @apply badge bg-blue-500/20 text-blue-400;
+  }
+}
+
+/* Light mode component overrides */
+html.light .card {
+  @apply bg-white/80 border-slate-200 shadow-slate-200/20;
+}
+html.light .sidebar-link {
+  @apply text-slate-600 hover:text-slate-900 hover:bg-slate-100;
+}
+html.light .sidebar-link.active {
+  @apply text-slate-900 bg-primary-100 border-primary-500;
+}
+html.light .sidebar {
+  @apply bg-white/95 border-slate-200;
+}
+html.light .sidebar .text-white {
+  @apply text-slate-900;
+}
+html.light .header-bar {
+  @apply bg-white/80 border-slate-200;
+}
+html.light .header-bar .text-slate-400 {
+  @apply text-slate-600;
+}
+html.light .input {
+  @apply bg-white border-slate-300 text-slate-900 placeholder-slate-400;
+}
+html.light .table-header {
+  @apply text-slate-500;
+}
+html.light .table-cell {
+  @apply text-slate-700;
+}
+
+/* Leaflet map container - theme-aware */
+.leaflet-container {
+  background: #1e293b;
+  border-radius: 0.5rem;
+}
+html.light .leaflet-container {
+  background: #e2e8f0;
+}
+.leaflet-control-layers {
+  border-radius: 8px;
+}
+html.dark .leaflet-control-layers {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+html.light .leaflet-control-layers {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Animation classes */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
