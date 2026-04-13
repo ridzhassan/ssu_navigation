@@ -208,8 +208,8 @@ function App() {
         isNavigating={navigationState === 'navigating'}
       />
 
-      {/* Map */}
-      <div className="flex-1 relative">
+      {/* Map — min-h-0 so flex child can shrink; Leaflet needs a real height for tiles */}
+      <div className="flex-1 relative min-h-0">
         <Map
           pois={pois}
           userLocation={userLocation}
@@ -218,6 +218,7 @@ function App() {
           isNavigating={navigationState === 'navigating'}
           routeWaypoints={routeWaypoints}
           showMatrix={showMatrix}
+          isLoading={isLoading}
         />
 
         {/* Error message */}

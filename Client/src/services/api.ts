@@ -6,6 +6,7 @@ const API_BASE = 'https://ssunavigation-production.up.railway.app/api'
 
 const api = axios.create({
   baseURL: API_BASE,
+  timeout: 20000,
   headers: {
     'Content-Type': 'application/json'
   }

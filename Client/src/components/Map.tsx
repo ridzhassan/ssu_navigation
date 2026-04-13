@@ -14,7 +14,16 @@ import L from 'leaflet'
 import { CAMPUS_GRAPH_NODES, CAMPUS_GRAPH_EDGES } from '../constants/mapMatrix'
 import { POI, UserLocation } from '../types'
 
-const { BaseLayer } = LayersControl
+const { BaseLayer, Overlay } = LayersControl
+
+// Real-world basemaps (no API key). Esri terms: https://www.esri.com/en-us/legal/terms/full-master-agreement
+const ESRI_IMAGERY =
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+// Same host as imagery (avoids some firewalls / CSP that block services.arcgisonline.com only)
+const ESRI_REFERENCE_LABELS =
+  'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'
+const ESRI_STREET =
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'
 
 // Fix Leaflet default icon path resolution in bundlers
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -100,6 +109,39 @@ interface MapProps {
   isNavigating: boolean
   routeWaypoints?: [number, number][]
   showMatrix?: boolean
+  /** When this flips false, map size is recalculated (loading overlay was covering the map). */
+  isLoading?: boolean
+}
+
+// ─── Fix grey / missing tiles when map mounts inside flex / after loading overlay ───
+function MapLayoutFix({ isLoading }: { isLoading?: boolean }) {
+  const map = useMap()
+  useEffect(() => {
+    const fix = () => {
+      map.invalidateSize()
+    }
+    fix()
+    const t = window.setTimeout(fix, 100)
+    const t2 = window.setTimeout(fix, 400)
+    window.addEventListener('resize', fix)
+    return () => {
+      window.clearTimeout(t)
+      window.clearTimeout(t2)
+      window.removeEventListener('resize', fix)
+    }
+  }, [map])
+
+  useEffect(() => {
+    if (isLoading) return
+    const t = window.setTimeout(() => map.invalidateSize(), 0)
+    const t2 = window.setTimeout(() => map.invalidateSize(), 150)
+    return () => {
+      window.clearTimeout(t)
+      window.clearTimeout(t2)
+    }
+  }, [isLoading, map])
+
+  return null
 }
 
 // ─── Map view auto-updater ─────────────────────────────────────────────────────
@@ -115,6 +157,10 @@ function MapUpdater({ userLocation, selectedPOI, isNavigating }: {
     } else if (selectedPOI) {
       map.setView([selectedPOI.Latitude, selectedPOI.Longitude], 17, { animate: true })
     }
+  }, [userLocation, selectedPOI, isNavigating, map])
+  useEffect(() => {
+    const id = window.setTimeout(() => map.invalidateSize(), 0)
+    return () => window.clearTimeout(id)
   }, [userLocation, selectedPOI, isNavigating, map])
   return null
 }
@@ -180,6 +226,7 @@ export default function Map({
   isNavigating,
   routeWaypoints,
   showMatrix = true,
+  isLoading = false,
 }: MapProps) {
   const campusCenter: [number, number] = [6.051051865873037, 121.01298063248167]
 
@@ -197,37 +244,60 @@ export default function Map({
     <MapContainer
       center={campusCenter}
       zoom={17}
-      className="h-full w-full"
+      className="h-full w-full z-0"
+      style={{ minHeight: '100%', width: '100%', height: '100%' }}
       zoomControl={false}
     >
-      {/* ── Tile layers ──────────────────────────────────────────────────────── */}
+      {/* Ensure Leaflet recalculates size after flex layout / overlay hides */}
+      <MapLayoutFix isLoading={isLoading} />
+
       {/*
-        All three base layers live inside LayersControl.
-        Satellite is checked so it renders by default – giving the "real" look
-        the user wants. Street and Dark are available as alternatives.
+        Important: put ALL BaseLayers first, then Overlays last.
+        An Overlay between BaseLayers breaks layer switching / can leave a grey map in react-leaflet.
       */}
       <LayersControl position="topright">
-        <BaseLayer name="Satellite (ESRI)" checked>
+        <BaseLayer name="Aerial (real satellite)" checked>
           <TileLayer
-            attribution='&copy; <a href="https://www.esri.com/">Esri</a> — Source: Esri, DigitalGlobe, GeoEye, Earthstar Geographics'
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            attribution='&copy; <a href="https://www.esri.com/">Esri</a> — Maxar, Earthstar, others'
+            url={ESRI_IMAGERY}
             maxZoom={20}
           />
         </BaseLayer>
 
-        <BaseLayer name="Street (OSM)">
+        <BaseLayer name="Street map (Esri)">
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+            url={ESRI_STREET}
+            maxZoom={19}
           />
         </BaseLayer>
 
-        <BaseLayer name="Dark (CartoDB)">
+        <BaseLayer name="Street (OpenStreetMap)">
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maxZoom={19}
+            subdomains={['a', 'b', 'c']}
           />
         </BaseLayer>
+
+        <BaseLayer name="Dark (Carto)">
+          <TileLayer
+            attribution='&copy; OSM &copy; <a href="https://carto.com/">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            maxZoom={20}
+          />
+        </BaseLayer>
+
+        {/* Optional hybrid labels — off by default so a bad overlay never hides the basemap */}
+        <Overlay name="Labels on aerial">
+          <TileLayer
+            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+            url={ESRI_REFERENCE_LABELS}
+            maxZoom={20}
+            opacity={0.9}
+          />
+        </Overlay>
       </LayersControl>
 
       {/* ── Map updater ───────────────────────────────────────────────────── */}
