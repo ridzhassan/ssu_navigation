@@ -57,37 +57,37 @@ export default function SearchPanel({ isOpen, onClose, pois, onSelectPOI }: Sear
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[2000] flex flex-col bg-dark-900/95 backdrop-blur-lg slide-up">
+    <div className="fixed inset-0 z-[2000] flex flex-col bg-dark-900/95 backdrop-blur-lg slide-up pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       {/* Header */}
-      <div className="p-4 border-b border-white/10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-display font-bold text-white">Find Destination</h2>
+      <div className="sticky top-0 z-10 p-3 sm:p-4 border-b border-white/10 bg-dark-900/95">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h2 className="text-lg sm:text-xl font-display font-bold text-white">Find Destination</h2>
           <button
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
           >
-            <X className="w-6 h-6 text-slate-400" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6 text-slate-400" />
           </button>
         </div>
 
         {/* Search input */}
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
           <input
             type="text"
             placeholder="Search buildings, offices, facilities..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="input pl-12"
+            className="input pl-10 sm:pl-12 py-2.5 sm:py-3 text-sm sm:text-base"
             autoFocus
           />
         </div>
 
         {/* Type filters */}
-        <div className="flex gap-2 mt-4 overflow-x-auto pb-2 -mx-4 px-4">
+        <div className="flex gap-2 mt-3 sm:mt-4 overflow-x-auto pb-2 -mx-3 sm:-mx-4 px-3 sm:px-4">
           <button
             onClick={() => setSelectedType(null)}
-            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
               !selectedType 
                 ? 'bg-primary-500 text-white' 
                 : 'bg-white/5 text-slate-400 hover:bg-white/10'
@@ -99,7 +99,7 @@ export default function SearchPanel({ isOpen, onClose, pois, onSelectPOI }: Sear
             <button
               key={type}
               onClick={() => setSelectedType(type === selectedType ? null : type)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all capitalize flex items-center gap-2 ${
+              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all capitalize flex items-center gap-1.5 sm:gap-2 ${
                 selectedType === type
                   ? 'bg-primary-500 text-white'
                   : 'bg-white/5 text-slate-400 hover:bg-white/10'
@@ -113,30 +113,30 @@ export default function SearchPanel({ isOpen, onClose, pois, onSelectPOI }: Sear
       </div>
 
       {/* Results */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 pb-6 sm:pb-8">
         {filteredPOIs.length === 0 ? (
-          <div className="text-center py-12">
-            <MapPin className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+          <div className="text-center py-10 sm:py-12">
+            <MapPin className="w-10 h-10 sm:w-12 sm:h-12 text-slate-600 mx-auto mb-4" />
             <p className="text-slate-400">No locations found</p>
-            <p className="text-slate-500 text-sm mt-1">Try a different search term</p>
+            <p className="text-slate-500 text-xs sm:text-sm mt-1">Try a different search term</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5 sm:space-y-3">
             {filteredPOIs.map(poi => (
               <button
                 key={poi.POIId}
                 onClick={() => onSelectPOI(poi)}
-                className="w-full p-4 bg-white/5 hover:bg-white/10 rounded-xl text-left transition-all group"
+                className="w-full p-3 sm:p-4 bg-white/5 hover:bg-white/10 rounded-xl text-left transition-all group"
               >
-                <div className="flex items-start gap-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${typeColors[poi.Type.toLowerCase()] || 'bg-slate-500/20 text-slate-400'}`}>
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${typeColors[poi.Type.toLowerCase()] || 'bg-slate-500/20 text-slate-400'}`}>
                     {typeIcons[poi.Type.toLowerCase()] || <MapPin className="w-5 h-5" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white group-hover:text-primary-400 transition-colors">
+                    <h3 className="font-semibold text-sm sm:text-base text-white group-hover:text-primary-400 transition-colors">
                       {poi.BuildingName}
                     </h3>
-                    <p className="text-sm text-slate-400 mt-1 line-clamp-2">
+                    <p className="text-xs sm:text-sm text-slate-400 mt-1 line-clamp-2">
                       {poi.Description}
                     </p>
                     <div className="flex items-center gap-2 mt-2">

@@ -1,8 +1,9 @@
 import axios from 'axios'
 import { POI, Building } from '../types'
 
-//const API_BASE = '/api'
-const API_BASE = 'https://ssunavigation-production.up.railway.app/api'
+const DEFAULT_API_BASE = 'https://ssunavigation-production.up.railway.app/api'
+const rawApiBase = import.meta.env.VITE_API_URL?.trim() || DEFAULT_API_BASE
+const API_BASE = rawApiBase.replace(/\/+$/, '')
 
 const api = axios.create({
   baseURL: API_BASE,
