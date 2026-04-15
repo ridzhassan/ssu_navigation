@@ -1,11 +1,13 @@
-import { Navigation, Search } from 'lucide-react'
+import { Navigation, Search, Camera } from 'lucide-react'
 
 interface HeaderProps {
   onSearchClick: () => void
   isNavigating: boolean
+  isARMode: boolean
+  onToggleARMode: () => void
 }
 
-export default function Header({ onSearchClick, isNavigating }: HeaderProps) {
+export default function Header({ onSearchClick, isNavigating, isARMode, onToggleARMode }: HeaderProps) {
   return (
     <header className="absolute top-0 left-0 right-0 z-[1000] p-4">
       <div className="glass rounded-2xl px-4 py-3 flex items-center justify-between">
@@ -20,17 +22,32 @@ export default function Header({ onSearchClick, isNavigating }: HeaderProps) {
           </div>
         </div>
 
-        {/* Search button */}
-        {!isNavigating && (
+        {/* Controls */}
+        <div className="flex items-center gap-2">
+          {!isNavigating && (
+            <button
+              onClick={onSearchClick}
+              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 transition-all"
+            >
+              <Search className="w-4 h-4 text-slate-400" />
+              <span className="text-slate-300 text-sm hidden sm:inline">Search destination...</span>
+              <span className="text-slate-300 text-sm sm:hidden">Search</span>
+            </button>
+          )}
+
           <button
-            onClick={onSearchClick}
-            className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-2.5 transition-all"
+            onClick={onToggleARMode}
+            className={`flex items-center gap-2 border rounded-xl px-3 py-2.5 transition-all ${
+              isARMode
+                ? 'bg-primary-500/25 border-primary-500/40 text-primary-300'
+                : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-300'
+            }`}
+            title={isARMode ? 'Switch to map view' : 'Switch to AR view'}
           >
-            <Search className="w-4 h-4 text-slate-400" />
-            <span className="text-slate-300 text-sm hidden sm:inline">Search destination...</span>
-            <span className="text-slate-300 text-sm sm:hidden">Search</span>
+            <Camera className="w-4 h-4" />
+            <span className="text-sm hidden sm:inline">{isARMode ? 'Map' : 'AR'}</span>
           </button>
-        )}
+        </div>
 
         {/* Navigation status */}
         {isNavigating && (

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import Map from './components/Map'
+import ARView from './components/ARView'
 import SearchPanel from './components/SearchPanel'
 import NavigationPanel from './components/NavigationPanel'
 import Header from './components/Header'
@@ -29,6 +30,7 @@ function App() {
   const [watchId, setWatchId] = useState<number | null>(null)
   const [routeWaypoints, setRouteWaypoints] = useState<[number, number][] | undefined>(undefined)
   const [showMatrix, setShowMatrix] = useState(true)
+  const [isARMode, setIsARMode] = useState(false)
 
   // Load POIs on mount
   useEffect(() => {
@@ -206,20 +208,33 @@ function App() {
       <Header 
         onSearchClick={() => setIsSearchOpen(true)}
         isNavigating={navigationState === 'navigating'}
+        isARMode={isARMode}
+        onToggleARMode={() => setIsARMode(v => !v)}
       />
 
       {/* Map — min-h-0 so flex child can shrink; Leaflet needs a real height for tiles */}
       <div className="flex-1 relative min-h-0">
-        <Map
-          pois={pois}
-          userLocation={userLocation}
-          selectedPOI={selectedPOI}
-          onSelectPOI={handleSelectDestination}
-          isNavigating={navigationState === 'navigating'}
-          routeWaypoints={routeWaypoints}
-          showMatrix={showMatrix}
-          isLoading={isLoading}
-        />
+        {isARMode ? (
+          <ARView
+            userLocation={userLocation}
+            selectedPOI={selectedPOI}
+            isNavigating={navigationState === 'navigating'}
+            navigationState={navigationState}
+            distance={distance}
+            direction={direction}
+          />
+        ) : (
+          <Map
+            pois={pois}
+            userLocation={userLocation}
+            selectedPOI={selectedPOI}
+            onSelectPOI={handleSelectDestination}
+            isNavigating={navigationState === 'navigating'}
+            routeWaypoints={routeWaypoints}
+            showMatrix={showMatrix}
+            isLoading={isLoading}
+          />
+        )}
 
         {/* Error message */}
         {error && (
@@ -239,34 +254,38 @@ function App() {
         )}
 
         {/* Center on user button */}
-        <button
-          onClick={handleCenterOnUser}
-          className="absolute bottom-32 right-4 z-[1000] w-12 h-12 bg-dark-700 hover:bg-dark-600 rounded-full flex items-center justify-center shadow-lg transition-all"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-primary-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 2v2m0 16v2M2 12h2m16 0h2" />
-          </svg>
-        </button>
+        {!isARMode && (
+          <button
+            onClick={handleCenterOnUser}
+            className="absolute bottom-32 right-4 z-[1000] w-12 h-12 bg-dark-700 hover:bg-dark-600 rounded-full flex items-center justify-center shadow-lg transition-all"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-primary-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2v2m0 16v2M2 12h2m16 0h2" />
+            </svg>
+          </button>
+        )}
 
         {/* Map matrix toggle */}
-        <button
-          onClick={() => setShowMatrix(v => !v)}
-          title={showMatrix ? 'Hide path network' : 'Show path network'}
-          className={`absolute bottom-48 right-4 z-[1000] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all ${
-            showMatrix
-              ? 'bg-primary-600 hover:bg-primary-500 text-white'
-              : 'bg-dark-700 hover:bg-dark-600 text-slate-400'
-          }`}
-        >
-          {/* Grid / matrix icon */}
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
-          </svg>
-        </button>
+        {!isARMode && (
+          <button
+            onClick={() => setShowMatrix(v => !v)}
+            title={showMatrix ? 'Hide path network' : 'Show path network'}
+            className={`absolute bottom-48 right-4 z-[1000] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all ${
+              showMatrix
+                ? 'bg-primary-600 hover:bg-primary-500 text-white'
+                : 'bg-dark-700 hover:bg-dark-600 text-slate-400'
+            }`}
+          >
+            {/* Grid / matrix icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Search Panel */}

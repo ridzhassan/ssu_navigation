@@ -41,6 +41,12 @@ router.get('/', async (req, res, next) => {
                 building_id as BuildingId,
                 floor as Floor,
                 tags as Tags,
+                ar_enabled as AREnabled,
+                ar_label as ARLabel,
+                anchor_height as AnchorHeight,
+                icon_scale as IconScale,
+                min_visible_distance as MinVisibleDistance,
+                max_visible_distance as MaxVisibleDistance,
                 created_at as createdAt
             FROM pois
             WHERE is_active = 1
@@ -103,7 +109,13 @@ router.get('/search',
                     image_url as ImageUrl,
                     building_id as BuildingId,
                     floor as Floor,
-                    tags as Tags
+                    tags as Tags,
+                    ar_enabled as AREnabled,
+                    ar_label as ARLabel,
+                    anchor_height as AnchorHeight,
+                    icon_scale as IconScale,
+                    min_visible_distance as MinVisibleDistance,
+                    max_visible_distance as MaxVisibleDistance
                 FROM pois
                 WHERE is_active = 1
                 AND (
@@ -173,6 +185,12 @@ router.get('/:id',
                     building_id as BuildingId,
                     floor as Floor,
                     tags as Tags,
+                    ar_enabled as AREnabled,
+                    ar_label as ARLabel,
+                    anchor_height as AnchorHeight,
+                    icon_scale as IconScale,
+                    min_visible_distance as MinVisibleDistance,
+                    max_visible_distance as MaxVisibleDistance,
                     created_at as createdAt,
                     updated_at as updatedAt
                 FROM pois
@@ -211,7 +229,13 @@ router.post('/',
         body('description').optional().trim(),
         body('buildingId').optional().isInt(),
         body('floor').optional().trim(),
-        body('tags').optional().isArray()
+        body('tags').optional().isArray(),
+        body('arEnabled').optional().isBoolean(),
+        body('arLabel').optional().trim(),
+        body('anchorHeight').optional().isFloat({ min: 0, max: 30 }),
+        body('iconScale').optional().isFloat({ min: 0.1, max: 10 }),
+        body('minVisibleDistance').optional().isFloat({ min: 0, max: 1000 }),
+        body('maxVisibleDistance').optional().isFloat({ min: 1, max: 5000 })
     ],
     validateRequest,
     async (req, res, next) => {
@@ -225,13 +249,19 @@ router.post('/',
                 imageUrl,
                 buildingId,
                 floor,
-                tags
+                tags,
+                arEnabled,
+                arLabel,
+                anchorHeight,
+                iconScale,
+                minVisibleDistance,
+                maxVisibleDistance
             } = req.body;
 
             const [result] = await db.query(`
                 INSERT INTO pois 
-                (building_name, latitude, longitude, type, description, image_url, building_id, floor, tags)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (building_name, latitude, longitude, type, description, image_url, building_id, floor, tags, ar_enabled, ar_label, anchor_height, icon_scale, min_visible_distance, max_visible_distance)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `, [
                 buildingName,
                 latitude,
@@ -241,7 +271,13 @@ router.post('/',
                 imageUrl || null,
                 buildingId || null,
                 floor || null,
-                tags ? JSON.stringify(tags) : null
+                tags ? JSON.stringify(tags) : null,
+                arEnabled === undefined ? 1 : (arEnabled ? 1 : 0),
+                arLabel || null,
+                anchorHeight ?? 1.6,
+                iconScale ?? 1,
+                minVisibleDistance ?? 3,
+                maxVisibleDistance ?? 300
             ]);
 
             res.status(201).json({
@@ -292,14 +328,26 @@ router.put('/:id',
                 imageUrl: 'image_url',
                 buildingId: 'building_id',
                 floor: 'floor',
-                tags: 'tags'
+                tags: 'tags',
+                arEnabled: 'ar_enabled',
+                arLabel: 'ar_label',
+                anchorHeight: 'anchor_height',
+                iconScale: 'icon_scale',
+                minVisibleDistance: 'min_visible_distance',
+                maxVisibleDistance: 'max_visible_distance'
             };
 
             for (const [key, value] of Object.entries(updates)) {
                 const dbField = fieldMapping[key];
                 if (dbField) {
                     fields.push(`${dbField} = ?`);
-                    values.push(key === 'tags' ? JSON.stringify(value) : value);
+                    if (key === 'tags') {
+                        values.push(JSON.stringify(value));
+                    } else if (key === 'arEnabled') {
+                        values.push(value ? 1 : 0);
+                    } else {
+                        values.push(value);
+                    }
                 }
             }
 

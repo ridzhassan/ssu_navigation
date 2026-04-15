@@ -30,6 +30,7 @@ async function initDatabase() {
         const fileBuffer = fs.readFileSync(dbPath);
         db = new SQL.Database(fileBuffer);
         console.log('✅ Database loaded from file');
+        ensureSchemaUpgrades();
         updateKnownPOICoordinates();
     } else {
         db = new SQL.Database();
@@ -74,6 +75,33 @@ function updateKnownPOICoordinates() {
         }
     });
     saveDatabase();
+}
+
+// Ensure incremental schema upgrades on existing databases.
+function ensureSchemaUpgrades() {
+    const columns = new Set();
+    const result = db.exec(`PRAGMA table_info(pois)`);
+    if (result[0]?.values) {
+        for (const row of result[0].values) {
+            columns.add(row[1]);
+        }
+    }
+
+    const alterStatements = [];
+    if (!columns.has('ar_enabled')) alterStatements.push(`ALTER TABLE pois ADD COLUMN ar_enabled INTEGER DEFAULT 1`);
+    if (!columns.has('ar_label')) alterStatements.push(`ALTER TABLE pois ADD COLUMN ar_label TEXT`);
+    if (!columns.has('anchor_height')) alterStatements.push(`ALTER TABLE pois ADD COLUMN anchor_height REAL DEFAULT 1.6`);
+    if (!columns.has('icon_scale')) alterStatements.push(`ALTER TABLE pois ADD COLUMN icon_scale REAL DEFAULT 1`);
+    if (!columns.has('min_visible_distance')) alterStatements.push(`ALTER TABLE pois ADD COLUMN min_visible_distance REAL DEFAULT 3`);
+    if (!columns.has('max_visible_distance')) alterStatements.push(`ALTER TABLE pois ADD COLUMN max_visible_distance REAL DEFAULT 300`);
+
+    for (const sql of alterStatements) {
+        db.run(sql);
+    }
+    if (alterStatements.length > 0) {
+        saveDatabase();
+        console.log(`✅ Applied ${alterStatements.length} POI AR schema upgrade(s)`);
+    }
 }
 
 // Save database to file
@@ -130,6 +158,12 @@ function createSchema() {
             building_id INTEGER,
             floor TEXT,
             tags TEXT,
+            ar_enabled INTEGER DEFAULT 1,
+            ar_label TEXT,
+            anchor_height REAL DEFAULT 1.6,
+            icon_scale REAL DEFAULT 1,
+            min_visible_distance REAL DEFAULT 3,
+            max_visible_distance REAL DEFAULT 300,
             is_active INTEGER DEFAULT 1,
             created_at TEXT DEFAULT (datetime('now')),
             updated_at TEXT DEFAULT (datetime('now')),

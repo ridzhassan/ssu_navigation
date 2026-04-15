@@ -9,6 +9,12 @@ export interface POI {
   BuildingId?: number
   Floor?: string
   Tags?: string[]
+  AREnabled?: number
+  ARLabel?: string
+  AnchorHeight?: number
+  IconScale?: number
+  MinVisibleDistance?: number
+  MaxVisibleDistance?: number
 }
 
 export interface Building {

@@ -13,6 +13,12 @@ interface POI {
   BuildingId?: number
   Floor?: string
   Tags?: string[]
+  AREnabled?: number
+  ARLabel?: string
+  AnchorHeight?: number
+  IconScale?: number
+  MinVisibleDistance?: number
+  MaxVisibleDistance?: number
 }
 
 interface Building {
@@ -36,7 +42,13 @@ export default function POIs() {
     description: '',
     buildingId: '',
     floor: '',
-    tags: ''
+    tags: '',
+    arEnabled: true,
+    arLabel: '',
+    anchorHeight: '1.6',
+    iconScale: '1',
+    minVisibleDistance: '3',
+    maxVisibleDistance: '300'
   })
 
   const poiTypes = [
@@ -84,7 +96,13 @@ export default function POIs() {
         description: poi.Description || '',
         buildingId: poi.BuildingId?.toString() || '',
         floor: poi.Floor || '',
-        tags: poi.Tags?.join(', ') || ''
+        tags: poi.Tags?.join(', ') || '',
+        arEnabled: (poi.AREnabled ?? 1) === 1,
+        arLabel: poi.ARLabel || '',
+        anchorHeight: (poi.AnchorHeight ?? 1.6).toString(),
+        iconScale: (poi.IconScale ?? 1).toString(),
+        minVisibleDistance: (poi.MinVisibleDistance ?? 3).toString(),
+        maxVisibleDistance: (poi.MaxVisibleDistance ?? 300).toString()
       })
     } else {
       setEditingPOI(null)
@@ -96,7 +114,13 @@ export default function POIs() {
         description: '',
         buildingId: '',
         floor: '',
-        tags: ''
+        tags: '',
+        arEnabled: true,
+        arLabel: '',
+        anchorHeight: '1.6',
+        iconScale: '1',
+        minVisibleDistance: '3',
+        maxVisibleDistance: '300'
       })
     }
     setShowModal(true)
@@ -118,7 +142,13 @@ export default function POIs() {
       description: formData.description,
       buildingId: formData.buildingId ? parseInt(formData.buildingId) : undefined,
       floor: formData.floor || undefined,
-      tags: formData.tags.split(',').map(t => t.trim()).filter(t => t)
+      tags: formData.tags.split(',').map(t => t.trim()).filter(t => t),
+      arEnabled: formData.arEnabled,
+      arLabel: formData.arLabel || undefined,
+      anchorHeight: parseFloat(formData.anchorHeight),
+      iconScale: parseFloat(formData.iconScale),
+      minVisibleDistance: parseFloat(formData.minVisibleDistance),
+      maxVisibleDistance: parseFloat(formData.maxVisibleDistance)
     }
 
     try {
@@ -229,6 +259,7 @@ export default function POIs() {
                 {poi.Latitude.toFixed(5)}, {poi.Longitude.toFixed(5)}
               </p>
               {poi.Floor && <p>Floor: {poi.Floor}</p>}
+              <p>AR: {(poi.AREnabled ?? 1) === 1 ? 'Enabled' : 'Disabled'}</p>
             </div>
 
             {poi.Tags && poi.Tags.length > 0 && (
@@ -378,6 +409,81 @@ export default function POIs() {
                   className="input"
                   placeholder="IT, Computer Science, Lab"
                 />
+              </div>
+
+              <div className="rounded-lg border border-slate-700/70 p-4 space-y-4">
+                <p className="text-sm font-medium text-slate-200">AR Configuration</p>
+
+                <label className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-slate-300">Enable in AR mode</span>
+                  <input
+                    type="checkbox"
+                    checked={formData.arEnabled}
+                    onChange={(e) => setFormData({ ...formData, arEnabled: e.target.checked })}
+                    className="h-4 w-4 accent-primary-500"
+                  />
+                </label>
+
+                <div>
+                  <label className="label">AR Label (Optional)</label>
+                  <input
+                    type="text"
+                    value={formData.arLabel}
+                    onChange={(e) => setFormData({ ...formData, arLabel: e.target.value })}
+                    className="input"
+                    placeholder="Custom AR label"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">Anchor Height (m)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={formData.anchorHeight}
+                      onChange={(e) => setFormData({ ...formData, anchorHeight: e.target.value })}
+                      className="input"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Icon Scale</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      value={formData.iconScale}
+                      onChange={(e) => setFormData({ ...formData, iconScale: e.target.value })}
+                      className="input"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">Min Visible Distance (m)</label>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      value={formData.minVisibleDistance}
+                      onChange={(e) => setFormData({ ...formData, minVisibleDistance: e.target.value })}
+                      className="input"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Max Visible Distance (m)</label>
+                    <input
+                      type="number"
+                      step="1"
+                      min="1"
+                      value={formData.maxVisibleDistance}
+                      onChange={(e) => setFormData({ ...formData, maxVisibleDistance: e.target.value })}
+                      className="input"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-4">
